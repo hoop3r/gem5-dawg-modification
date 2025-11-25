@@ -1,99 +1,33 @@
-# The gem5 Simulator
+# Examining DAWG Cache Partitioning Performance through CPU simulation
 
-This is the repository for the gem5 simulator. It contains the full source code
-for the simulator and all tests and regressions.
+This proof-of-concept implements and evaluates the proposed dynamically allocated way guard (DAWG) strategy for mitigating cache-based side-channel attacks using gem5's syscall emulation (SE) mode.
 
-The gem5 simulator is a modular platform for computer-system architecture
-research, encompassing system-level architecture as well as processor
-microarchitecture. It is primarily used to evaluate new hardware designs,
-system software changes, and compile-time and run-time system optimizations.
 
-The main website can be found at <http://www.gem5.org>.
+## Implementation Flow
+1. CPU assigns a domain id to each memory access depending on access type (ifetch, load, store) and writes it into the request.
+2. The request is wrapped into a packet that carries the domain id to the cache.  
+4. On a tag hit, the cache queries the WayGuardTable for the allowed-way bitmask for that set and the packet’s domain.  
+5. If the hit way is allowed by the mask, the access completes as a normal hit.
+6. If the hit way is disallowed, the cache treats the hit as a miss (a masked-hit), records a hit-masked event, and proceeds to miss handling.  
+7. During miss handling, the replacement logic fetches the allowed-way mask and filters replacement candidates by intersecting with allowed ways.  
+8. If the filtered candidate list is non-empty, the replacement policy selects a victim from those allowed ways, records a filter event, and the eviction/installation proceeds
+9. Currently, if the filtered candidate list is empty, the system falls back to the original victim selection
+10. The chosen way is filled and the installed block’s metadata is set to the originating domain so future accesses are enforced consistently.  
+11. MSHR entries and forwarded requests preserve and copy the domain id so downstream fills and installs use the same domain for enforcement.  
 
-## Testing status
+### Build:
+`scons build/X86/gem5.opt -j$(nproc)`
 
-**Note**: These regard tests run on the develop branch of gem5:
-<https://github.com/gem5/gem5/tree/develop>.
+### Run & Benchmark:
+ both baseline & dawg:<br><br> 
+`python3 util/run_dawg_experiment.py` <br><br> 
+ run only dawg:<br><br> 
+`python3 util/run_dawg_experiment.py --no-baseline` <br><br> 
+ run only baseline:<br><br> 
+`python3 util/run_dawg_experiment.py --no-dawg`
 
-[![Daily Tests](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml)
-[![Weekly Tests](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml)
-[![Compiler Tests](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml)
 
-## Getting started
+### References:
+[DAWG: A Defense Against Cache Timing Attacks in Speculative Execution Processors*](https://eprint.iacr.org/2018/418.pdf)
 
-A good starting point is <http://www.gem5.org/about>, and for
-more information about building the simulator and getting started
-please see <http://www.gem5.org/documentation> and
-<http://www.gem5.org/documentation/learning_gem5/introduction>.
-
-## Building gem5
-
-To build gem5, you will need the following software: g++ or clang,
-Python (gem5 links in the Python interpreter), SCons, zlib, m4, and lastly
-protobuf if you want trace capture and playback support. Please see
-<http://www.gem5.org/documentation/general_docs/building> for more details
-concerning the minimum versions of these tools.
-
-Once you have all dependencies resolved, execute
-`scons build/ALL/gem5.opt` to build an optimized version of the gem5 binary
-(`gem5.opt`) containing all gem5 ISAs. If you only wish to compile gem5 to
-include a single ISA, you can replace `ALL` with the name of the ISA. Valid
-options include `ARM`, `NULL`, `MIPS`, `POWER`, `RISCV`, `SPARC`, and `X86`
-The complete list of options can be found in the build_opts directory.
-
-See https://www.gem5.org/documentation/general_docs/building for more
-information on building gem5.
-
-## The Source Tree
-
-The main source tree includes these subdirectories:
-
-* build_opts: pre-made default configurations for gem5
-* build_tools: tools used internally by gem5's build process.
-* configs: example simulation configuration scripts
-* ext: less-common external packages needed to build gem5
-* include: include files for use in other programs
-* site_scons: modular components of the build system
-* src: source code of the gem5 simulator. The C++ source, Python wrappers, and Python standard library are found in this directory.
-* system: source for some optional system software for simulated systems
-* tests: regression tests
-* util: useful utility programs and files
-
-## gem5 Resources
-
-To run full-system simulations, you may need compiled system firmware, kernel
-binaries and one or more disk images, depending on gem5's configuration and
-what type of workload you're trying to run. Many of these resources can be
-obtained from <https://resources.gem5.org>.
-
-More information on gem5 Resources can be found at
-<https://www.gem5.org/documentation/general_docs/gem5_resources/>.
-
-## Getting Help, Reporting bugs, and Requesting Features
-
-We provide a variety of channels for users and developers to get help, report
-bugs, requests features, or engage in community discussions. Below
-are a few of the most common we recommend using.
-
-* **GitHub Discussions**: A GitHub Discussions page. This can be used to start
-discussions or ask questions. Available at
-<https://github.com/orgs/gem5/discussions>.
-* **GitHub Issues**: A GitHub Issues page for reporting bugs or requesting
-features. Available at <https://github.com/gem5/gem5/issues>.
-* **Jira Issue Tracker**: A Jira Issue Tracker for reporting bugs or requesting
-features. Available at <https://gem5.atlassian.net/>.
-* **Slack**: A Slack server with a variety of channels for the gem5 community
-to engage in a variety of discussions. Please visit
-<https://www.gem5.org/join-slack> to join.
-* **gem5-users@gem5.org**: A mailing list for users of gem5 to ask questions
-or start discussions. To join the mailing list please visit
-<https://www.gem5.org/mailing_lists>.
-* **gem5-dev@gem5.org**: A mailing list for developers of gem5 to ask questions
-or start discussions. To join the mailing list please visit
-<https://www.gem5.org/mailing_lists>.
-
-## Contributing to gem5
-
-We hope you enjoy using gem5. When appropriate we advise sharing your
-contributions to the project. <https://www.gem5.org/contributing> can help you
-get started. Additional information can be found in the CONTRIBUTING.md file.
+[Microbenchmark](https://github.com/tgrogers/gem5)
