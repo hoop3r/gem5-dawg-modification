@@ -171,7 +171,7 @@ class BaseTags : public ClockedObject
         statistics::Vector dawgFilteredCandidatesPerDomain;
 
         //how many installs occurred per domain under DAWG control
-        statistics::Vector dawgInstallsPerDomain;
+        statistics::Vector dawgFillsPerDomain;
     } stats;
 
   public:

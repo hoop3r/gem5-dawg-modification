@@ -127,13 +127,13 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     stats.tagAccesses += 1;
     stats.dataAccesses += 1;
 
-    // log installs to see which set/way/domain combinations are actually populated.
+    // log fills to see which set/way/domain combinations are actually populated.
     if (blk && pkt && pkt->req) {
         uint32_t set = blk->getSet();
         uint32_t way = blk->getWay();
         uint32_t domain = blk->getDomainId();
         Addr addr = indexingPolicy->regenerateAddr({blk->getTag(), blk->isSecure()}, blk);
-        cprintf("DAWG-INSTALL: set=%u way=%u block_domain=%u addr=0x%llx\n",
+        cprintf("DAWG-FILL: set=%u way=%u block_domain=%u addr=0x%llx\n",
                 set, way, domain, (unsigned long long)addr);
     }
 }
@@ -271,7 +271,7 @@ BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
     ADD_STAT(dawgFilteredCandidatesPerDomain,
              statistics::units::Count::get(),
              "Number of DAWG-filtered replacement candidates per domain"),
-    ADD_STAT(dawgInstallsPerDomain,
+    ADD_STAT(dawgFillsPerDomain,
              statistics::units::Count::get(),
              "Number of DAWG-controlled installs per domain")
 {
@@ -324,13 +324,13 @@ BaseTags::BaseTagStats::regStats()
         dawgFilteredCandidatesPerDomain
             .init(max_req)
             .flags(nozero | nonan);
-        dawgInstallsPerDomain
+        dawgFillsPerDomain
             .init(max_req)
             .flags(nozero | nonan);
         for (int i = 0; i < max_req; ++i) {
             const auto &name = system->getRequestorName(i);
             dawgFilteredCandidatesPerDomain.subname(i, name);
-            dawgInstallsPerDomain.subname(i, name);
+            dawgFillsPerDomain.subname(i, name);
         }
     }
 }

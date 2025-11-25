@@ -309,8 +309,8 @@ after_dawg_hit_mask:
 
         if (victim && pkt && pkt->req) {
             uint32_t install_domain = pkt->req->domainId();
-            if (stats.dawgInstallsPerDomain.size() > install_domain) {
-                stats.dawgInstallsPerDomain[install_domain]++;
+            if (stats.dawgFillsPerDomain.size() > install_domain) {
+                stats.dawgFillsPerDomain[install_domain]++;
             }
         }
 
@@ -341,8 +341,8 @@ after_dawg_hit_mask:
 
         if (pkt && pkt->req) {
             uint32_t install_domain = pkt->req->domainId();
-            if (stats.dawgInstallsPerDomain.size() > install_domain) {
-                stats.dawgInstallsPerDomain[install_domain]++;
+            if (stats.dawgFillsPerDomain.size() > install_domain) {
+                stats.dawgFillsPerDomain[install_domain]++;
             }
         }
     }

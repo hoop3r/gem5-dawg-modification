@@ -431,7 +431,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     CacheBlk *blk = nullptr;
     bool satisfied = false;
     {
-        // trace incoming packet -> blockAddr and domain to correlate with future DAWG-INSTALL entries
+        // trace incoming packet -> blockAddr and domain to correlate with future DAWG-FILL entries
         Addr pkt_blk_addr = pkt->getBlockAddr(blkSize);
         uint32_t pkt_req_dom = pkt->req ? pkt->req->domainId() : 0;
         cprintf("DAWG-TRACE: incoming pkt_blk_addr=0x%llx pkt_cmd=%u req_domain=%u pkt_addr=0x%llx\n",

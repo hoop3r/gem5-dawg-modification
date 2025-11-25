@@ -65,8 +65,9 @@ def read_simout(simout_path: Path) -> Dict[str, int]:
         raise FileNotFoundError(f"simout file not found: {simout_path}")
 
     counts = {
+        "hit_mask": 0,
         "filter": 0,
-        "install": 0,
+        "fill": 0,
         "fallback": 0,
         "assert_fail": 0,
     }
@@ -75,8 +76,10 @@ def read_simout(simout_path: Path) -> Dict[str, int]:
         for line in f:
             if "DAWG-FILTER" in line:
                 counts["filter"] += 1
-            if "DAWG-INSTALL" in line:
-                counts["install"] += 1
+            if "DAWG-HIT-MASK" in line:
+                counts["hit_mask"] += 1
+            if "DAWG-FILL" in line:
+                counts["fill"] += 1
             if "DAWG-FALLBACK" in line:
                 counts["fallback"] += 1
             if "DAWG-ASSERT-FAIL" in line:
@@ -91,7 +94,7 @@ def parse_dawg_stats(
 
     result: Dict[str, Dict[str, float]] = {
         "dawgFilteredCandidatesPerDomain": {},
-        "dawgInstallsPerDomain": {},
+        "dawgFillsPerDomain": {},
     }
 
     if not stats_path.is_file():
@@ -195,14 +198,15 @@ def gather_analysis(
     dawg_stats = parse_dawg_stats(stats_path, llc_name)
     performance_stats = parse_performance_stats(stats_path)
 
-    print(f"DAWG analysis for LLC '{llc_name}'")
+    print(f"DAWG analysis for '{llc_name}'")
     print(f"  stats:  {stats_path}")
     print(f"  simout: {real_simout}")
     print()
 
     print("=== simout: DAWG debug log events ===")
     print(f"  DAWG-FILTER   lines: {log_counts['filter']}")
-    print(f"  DAWG-INSTALL  lines: {log_counts['install']}")
+    print(f"  DAWG-FILL  lines: {log_counts['fill']}")
+    print(f"  DAWG-HIT-MASK lines: {log_counts['hit_mask']}")
     print(f"  DAWG-FALLBACK lines: {log_counts['fallback']}")
     print(f"  DAWG-ASSERT-FAIL lines: {log_counts['assert_fail']}")
 
@@ -221,8 +225,8 @@ def gather_analysis(
     print()
     print(
         format_domain_table(
-            "Installs per domain",
-            dawg_stats["dawgInstallsPerDomain"],
+            "Fills per domain",
+            dawg_stats["dawgFillsPerDomain"],
         )
     )
 

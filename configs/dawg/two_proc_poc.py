@@ -118,7 +118,7 @@ root = Root(full_system=False, system=system)
 # binary = "tests/test-progs/threads/bin/x86/linux/threads"
 # binary = "tests/test-progs/hello/bin/x86/linux/hello"
 
-binary = "/home/hoop3r/School/Architecture/gem5-dawg-modification/external-microbench/ML2_BW_ldst/bench.X86"
+binary = "external-microbench/ML2_BW_ldst/bench.X86"
 
 system.workload = SEWorkload.init_compatible(binary)
 
